@@ -5,32 +5,42 @@ import {
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
+import { fetchArtworkById, fetchArtworksByQuery } from "./lib/artwork";
+import type { Artwork } from "./lib/artwork";
 
 const queryClient = new QueryClient();
 
-interface Artwork {
-  id: number;
-  title: string;
-  artist_display: string;
-  artist_id: string;
-  date_display: string;
+function Artwork(artwork: Artwork) {
+  const { id, title } = artwork;
+
+  const { data } = useQuery({
+    queryKey: ["artwork", { id }],
+    queryFn: fetchArtworkById,
+  });
+  const { artist_display, date_display, medium_display } = data?.data || {};
+
+  return (
+    <li>
+      <p>{title}</p>
+      {data?.data && (
+        <>
+          <p>{artist_display}</p>
+          <p>{date_display}</p>
+          <p>{medium_display}</p>
+        </>
+      )}
+    </li>
+  );
 }
 
-const fetchArtworksBySearchTerm = async ({
-  queryKey,
-}: any): Promise<Artwork[]> => {
-  const [_key, { searchTerm }] = queryKey;
-  const response = await fetch(
-    `https://api.artic.edu/api/v1/artworks/search?q=${searchTerm}`
-  );
-  const { data } = await response.json();
-  return data;
-};
+function Artworks({ query = null }: { query?: string | null }) {
+  if (!query) {
+    return <p>Start typing for search for artworks</p>;
+  }
 
-function Artworks({ searchTerm = null }: { searchTerm?: string | null }) {
   const { status, data, error } = useQuery({
-    queryKey: ["artworks", { searchTerm }],
-    queryFn: fetchArtworksBySearchTerm,
+    queryKey: ["artworks", { query }],
+    queryFn: fetchArtworksByQuery,
   });
 
   if (status === "pending") {
@@ -39,21 +49,19 @@ function Artworks({ searchTerm = null }: { searchTerm?: string | null }) {
   if (error) {
     return <p>{`Error fetching data: ${error}`}</p>;
   }
-  if (!searchTerm) {
-    return <p>Start typing for search for artworks</p>;
-  }
   return (
     <div>
-      <h2>{`Results for: ${searchTerm}`}</h2>
-      <ul>
-        {data.map((artwork) => (
-          <li key={artwork.id}>
-            <p>{artwork.title}</p>
-            <p>{artwork.date_display}</p>
-            <p>{artwork.artist_display}</p>
-          </li>
-        ))}
-      </ul>
+      {data.length === 0 && <h2>{`No results found for: ${query}`}</h2>}
+      {data.length > 0 && (
+        <>
+          <h2>{`Results for: ${query}`}</h2>
+          <ul>
+            {data.map((artwork) => (
+              <Artwork key={artwork.id} {...artwork} />
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }
@@ -83,7 +91,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <h1>Artworks</h1>
       <Search submitSearchValue={setSearchTerm} />
-      <Artworks searchTerm={searchTerm} />
+      <Artworks query={searchTerm} />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

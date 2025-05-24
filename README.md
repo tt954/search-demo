@@ -12,13 +12,16 @@ Using the Art Institute of Chicago API to learn more about data fetching and the
 - Process the user's query
 - Display a list of search results
 
+### 5/23/25
+
+- If no matching artwork is found, display "No results found"
+- Each result display title of artwork, artist, medium, date
+- Pagination
+
 ## To dos
 
-- Each result display title of artwork, artist, medium, date
-- If no matching artwork is found, display "No results found"
 - Limit search query to certain character length, query validation to prevent abuse
 - Combine data from other museum's APIs
-- Pagination
 - Display thumbnail image of artwork if search results is under 10
 - Rank search results based on the relevance of the artwork information to the search query (a simple ranking algorithm based on keyword frequency maybe)
 - Filter results by artist, title and more advanced, by art movement, subject matter, color, etc.

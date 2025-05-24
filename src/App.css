@@ -1,0 +1,26 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.search__form,
+.title {
+  margin: 2rem;
+}
+
+.results__container {
+  margin: 0 2rem;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.results__buttons {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+}

@@ -1,13 +1,9 @@
-export const fetchArtworksByQuery = async ({
-  queryKey,
-}: any): Promise<Response<Artwork[]>["data"]> => {
-  const [_key, { query }] = queryKey;
-  const response = await fetch(
-    `https://api.artic.edu/api/v1/artworks/search?q=${query}`
-  );
-  await new Promise((resolve) => setTimeout(resolve, 3000)); // similate slow network to see caching effects
-  const { data } = await response.json();
-  return data;
+export const fetchArtworksByQuery = (
+  query: string
+): Promise<Response<Artwork[]>> => {
+  return fetch(`https://api.artic.edu/api/v1/artworks/search?q=${query}`)
+    .then((response) => response.json())
+    .then((data) => data);
 };
 
 export const fetchArtworkById = async ({
@@ -45,6 +41,19 @@ export interface Artwork {
 
 interface Response<T = Artwork> {
   data: T;
-  pagination: { total: number; limit: number; offset: number };
+  pagination: {
+    total: number;
+    total_pages: number;
+    limit: number;
+    offset: number;
+  };
   config: { iiif_url: string };
 }
+
+// "pagination": {
+// "total": 2277,
+// "limit": 10,
+// "offset": 0,
+// "total_pages": 228,
+// "current_page": 1
+// }

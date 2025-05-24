@@ -8,6 +8,8 @@ import { useState } from "react";
 import { fetchArtworkById, fetchArtworksByQuery } from "./lib/artwork";
 import type { Artwork } from "./lib/artwork";
 
+import "./App.css";
+
 const queryClient = new QueryClient();
 
 function Artwork(artwork: Artwork) {
@@ -38,29 +40,61 @@ function Artworks({ query = null }: { query?: string | null }) {
     return <p>Start typing for search for artworks</p>;
   }
 
-  const { status, data, error } = useQuery({
-    queryKey: ["artworks", { query }],
-    queryFn: fetchArtworksByQuery,
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const {
+    isPending,
+    isFetching,
+    data: searchResults,
+    error,
+  } = useQuery({
+    queryKey: ["artworks", query],
+    queryFn: () => fetchArtworksByQuery(query),
   });
 
-  if (status === "pending") {
-    return <p>Fetching data...</p>;
+  const artworks = searchResults?.data || [];
+  const { total_pages } = searchResults?.pagination || {};
+
+  const handleNextPage = () => setCurrentPage((prev) => prev + 1);
+  const handlePreviousPage = () => setCurrentPage((prev) => prev - 1);
+
+  if (isPending) {
+    return <p>Loading...</p>;
   }
   if (error) {
     return <p>{`Error fetching data: ${error}`}</p>;
   }
   return (
-    <div>
-      {data.length === 0 && <h2>{`No results found for: ${query}`}</h2>}
-      {data.length > 0 && (
+    <div className="results__container">
+      {!isPending && artworks.length > 0 && (
         <>
           <h2>{`Results for: ${query}`}</h2>
-          <ul>
-            {data.map((artwork) => (
+          <ul className="results">
+            {artworks.map((artwork) => (
               <Artwork key={artwork.id} {...artwork} />
             ))}
           </ul>
+          <div className="results__buttons">
+            <button
+              type="button"
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={handleNextPage}
+              disabled={currentPage === total_pages}
+            >
+              Next
+            </button>
+          </div>
         </>
+      )}
+
+      {!isPending && !error && artworks.length === 0 && (
+        <p>{`No results found for: ${query}`}</p>
       )}
     </div>
   );
@@ -77,7 +111,7 @@ function Search({
   };
 
   return (
-    <form action={handleSubmit}>
+    <form action={handleSubmit} className="search__form">
       <input type="text" name="query" />
       <button type="submit">Search</button>
     </form>
@@ -89,10 +123,12 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <h1>Artworks</h1>
-      <Search submitSearchValue={setSearchTerm} />
-      <Artworks query={searchTerm} />
-      <ReactQueryDevtools initialIsOpen={false} />
+      <h1 className="title">Search for your favorite artworks</h1>
+      <main>
+        <Search submitSearchValue={setSearchTerm} />
+        <Artworks query={searchTerm} />
+        <ReactQueryDevtools initialIsOpen={false} />
+      </main>
     </QueryClientProvider>
   );
 }

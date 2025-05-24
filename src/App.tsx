@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   QueryClient,
   QueryClientProvider,
   useQuery,
@@ -46,17 +47,25 @@ function Artworks({ query = null }: { query?: string | null }) {
     isPending,
     isFetching,
     data: searchResults,
+    isPlaceholderData,
     error,
   } = useQuery({
     queryKey: ["artworks", query],
     queryFn: () => fetchArtworksByQuery(query),
+    placeholderData: keepPreviousData,
   });
 
   const artworks = searchResults?.data || [];
-  const { total_pages } = searchResults?.pagination || {};
+  const totalPages = searchResults?.pagination?.total_pages || 0;
 
-  const handleNextPage = () => setCurrentPage((prev) => prev + 1);
-  const handlePreviousPage = () => setCurrentPage((prev) => prev - 1);
+  const handleNextPage = () => {
+    if (!isPlaceholderData && currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
 
   if (isPending) {
     return <p>Loading...</p>;
@@ -85,7 +94,7 @@ function Artworks({ query = null }: { query?: string | null }) {
             <button
               type="button"
               onClick={handleNextPage}
-              disabled={currentPage === total_pages}
+              disabled={isPlaceholderData || currentPage === totalPages}
             >
               Next
             </button>
